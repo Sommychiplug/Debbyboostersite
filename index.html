@@ -2,157 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DebbyBooster | Social Media Boost</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  
-  <!-- Load Supabase library with fallback -->
+  <title>DebbyBooster – Test</title>
+  <!-- Load Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // Fallback if CDN fails
-    if (typeof window.supabase === 'undefined') {
-      document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>');
-    }
-  </script>
+</head>
+<body>
+  <h1>DebbyBooster – Auth Test</h1>
+  <div id="message"></div>
   
-  <!-- CONFIG AND AUTH with error handling -->
   <script>
     (function() {
-      // Check if Supabase library loaded
+      const messageDiv = document.getElementById('message');
+      messageDiv.innerHTML = 'Checking Supabase...';
+
+      // 1. Check if Supabase library loaded
       if (typeof window.supabase === 'undefined') {
-        console.error('❌ Supabase library failed to load. Check your internet or CDN.');
-        window.SUPABASE_ERROR = 'Library not loaded';
+        messageDiv.innerHTML = '❌ Supabase library failed to load.';
+        console.error('Supabase library missing');
         return;
       }
 
+      // 2. Initialize client
+      let supabase;
       try {
-        // ===== CONFIG =====
-        const supabase = window.supabase.createClient(
-          'https://qiacnkzrcfuphohyvwcy.supabase.co',  // Your URL
+        supabase = window.supabase.createClient(
+          'https://qiacnkzrcfuphohyvwcy.supabase.co',
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpYWNua3pyY2Z1cGhvaHl2d2N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTU1MDAsImV4cCI6MjA4Njk3MTUwMH0.jxAA51sJv64QYG8Li2-ynjpxvr4uJ7AsWxJGGixPnQ8'
         );
-        console.log('✅ Supabase initialized:', supabase);
-        window.supabaseClient = supabase; // make globally available
+        console.log('✅ Supabase client created', supabase);
+        messageDiv.innerHTML = '✅ Supabase client created. Trying signUp...';
+      } catch (e) {
+        messageDiv.innerHTML = '❌ Error creating client: ' + e.message;
+        console.error(e);
+        return;
+      }
 
-        // ===== AUTH FUNCTIONS =====
-        window.signUp = async function(email, password, referralCode = '') {
+      // 3. Test signUp function
+      window.testSignUp = async function(email, password) {
+        try {
           const { data, error } = await supabase.auth.signUp({ email, password });
           if (error) throw error;
-          // ... rest of signUp code ...
-          return data.user;
-        };
+          console.log('SignUp success:', data);
+          messageDiv.innerHTML = '✅ SignUp successful! Check your email (if confirmation required).';
+          return data;
+        } catch (err) {
+          console.error('SignUp error:', err);
+          messageDiv.innerHTML = '❌ SignUp error: ' + err.message;
+        }
+      };
 
-        window.signIn = async function(email, password) {
-          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          return data.user;
-        };
+      // Expose supabase globally for console testing
+      window.supabase = supabase;
 
-        window.signOut = async function() {
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
-        };
-
-        window.generateReferralCode = function(length = 8) {
-          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-          let result = '';
-          for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-          return result;
-        };
-
-        window.getCurrentUser = async function() {
-          const { data: { session } } = await supabase.auth.getSession();
-          return session?.user ?? null;
-        };
-
-        window.isAdmin = async function(userId) {
-          const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single();
-          return !error && data.role === 'admin';
-        };
-
-      } catch (err) {
-        console.error('❌ Supabase initialization failed:', err);
-        window.SUPABASE_ERROR = err.message;
-      }
+      // 4. Automatically try a test signup (you can change credentials)
+      window.testSignUp('testuser_' + Date.now() + '@example.com', 'password123');
     })();
-  </script>
-</head>
-<body class="bg-gray-50">
-  <!-- Rest of your HTML (navbar, sections, etc.) exactly as before -->
-  <!-- ... (keep all your existing body content from the previous version) ... -->
-  
-  <!-- Inline UI script (modified to check for functions) -->
-  <script>
-    // Check if auth functions are available
-    if (typeof window.signUp === 'undefined') {
-      document.getElementById('auth-error').innerText = 'Authentication system failed to load. Please refresh or contact support.';
-      console.error('Auth functions not defined. Check previous errors.');
-    }
-
-    // Toggle between login and signup (same as before)
-    let isLogin = true;
-    const authToggle = document.getElementById('auth-toggle');
-    const authSubmit = document.getElementById('auth-submit');
-    const authToggleText = document.getElementById('auth-toggle-text');
-    const referralInput = document.getElementById('referral-code');
-
-    authToggle.addEventListener('click', () => {
-      isLogin = !isLogin;
-      if (isLogin) {
-        authSubmit.innerText = 'Login';
-        authToggleText.innerText = "Don't have an account?";
-        authToggle.innerText = 'Sign Up';
-        referralInput.style.display = 'none';
-      } else {
-        authSubmit.innerText = 'Sign Up';
-        authToggleText.innerText = 'Already have an account?';
-        authToggle.innerText = 'Login';
-        referralInput.style.display = 'block';
-      }
-    });
-    referralInput.style.display = 'none';
-
-    document.getElementById('auth-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const referralCode = document.getElementById('referral-code').value;
-      const errorDiv = document.getElementById('auth-error');
-      errorDiv.innerText = '';
-
-      try {
-        if (!window.signUp || !window.signIn) throw new Error('Authentication functions not loaded');
-        if (isLogin) {
-          await window.signIn(email, password);
-        } else {
-          await window.signUp(email, password, referralCode);
-        }
-        window.location.href = '/dashboard.html';
-      } catch (err) {
-        console.error('Auth error:', err);
-        errorDiv.innerText = err.message || 'An error occurred. Please try again.';
-      }
-    });
-
-    // Fetch latest announcement (uses window.supabaseClient)
-    async function loadAnnouncement() {
-      try {
-        if (!window.supabaseClient) return;
-        const { data, error } = await window.supabaseClient
-          .from('announcements')
-          .select('message')
-          .order('created_at', { ascending: false })
-          .limit(1);
-        if (data && data.length > 0) {
-          document.getElementById('announcement-message').innerText = data[0].message;
-          document.getElementById('announcement').classList.remove('hidden');
-        }
-      } catch (err) {
-        console.error('Announcement error:', err);
-      }
-    }
-    loadAnnouncement();
   </script>
 </body>
 </html>
