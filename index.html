@@ -6,7 +6,11 @@
   <title>DebbyBooster | Social Media Boost</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Load Supabase library first -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Then our config and auth -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
 </head>
 <body class="bg-gray-50">
 
@@ -36,6 +40,10 @@
     Choose from a variety of services – Instagram followers, likes, Facebook followers, and more. 
     Our automated system delivers orders even while you sleep.
   </p>
+  <!-- Get Started Button -->
+  <div class="text-center mt-8">
+    <a href="#auth-section" class="bg-purple-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-purple-700 transition">Get Started</a>
+  </div>
 </section>
 
 <!-- Services Preview -->
@@ -58,7 +66,7 @@
 </section>
 
 <!-- Login / Signup Section -->
-<div class="container mx-auto py-16 px-4 max-w-md">
+<div id="auth-section" class="container mx-auto py-16 px-4 max-w-md">
   <div class="bg-white p-8 rounded shadow">
     <h2 class="text-2xl font-bold mb-4 text-center">Login or Sign Up</h2>
     <div id="auth-error" class="text-red-500 mb-2"></div>
@@ -90,9 +98,14 @@
   <i class="fab fa-whatsapp text-2xl"></i>
 </a>
 
-<script src="js/config.js"></script>
-<script src="js/auth.js"></script>
+<!-- Inline script for UI toggle and announcement -->
 <script>
+  // Check if Supabase is loaded
+  if (typeof supabase === 'undefined') {
+    console.error('Supabase client not loaded. Check your config.js and internet connection.');
+    document.getElementById('auth-error').innerText = 'Configuration error. Please refresh or contact support.';
+  }
+
   // Toggle between login and signup
   let isLogin = true;
   const authToggle = document.getElementById('auth-toggle');
@@ -127,6 +140,7 @@
     errorDiv.innerText = '';
 
     try {
+      if (!supabase) throw new Error('Supabase client not initialized');
       if (isLogin) {
         await signIn(email, password);
       } else {
@@ -135,20 +149,26 @@
       // Redirect to dashboard after successful login/signup
       window.location.href = '/dashboard.html';
     } catch (err) {
-      errorDiv.innerText = err.message;
+      console.error('Auth error:', err);
+      errorDiv.innerText = err.message || 'An error occurred. Please try again.';
     }
   });
 
   // Fetch latest announcement
   async function loadAnnouncement() {
-    const { data, error } = await supabase
-      .from('announcements')
-      .select('message')
-      .order('created_at', { ascending: false })
-      .limit(1);
-    if (data && data.length > 0) {
-      document.getElementById('announcement-message').innerText = data[0].message;
-      document.getElementById('announcement').classList.remove('hidden');
+    try {
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('message')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (data && data.length > 0) {
+        document.getElementById('announcement-message').innerText = data[0].message;
+        document.getElementById('announcement').classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error('Announcement error:', err);
     }
   }
   loadAnnouncement();
