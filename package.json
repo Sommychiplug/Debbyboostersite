@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@supabase/auth-js": "^2.96.0"
+  }
+}
